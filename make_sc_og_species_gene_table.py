@@ -45,11 +45,9 @@ def main():
         print(f"[WARN] Species columns in Orthogroups.tsv = {len(species_cols)}, "
               f"expected {args.expect_species_n}. (This may be OK if your run has different species count.)")
 
-    # 只保留 single-copy OG 行
     df_sc = df[df.iloc[:, 0].isin(sc_ogs)].copy()
     print(f"[INFO] Rows kept in Orthogroups.tsv that are in sc_ogs: {df_sc.shape[0]}")
 
-    # 建 wide 表：每格必须是 0 或 1 个 gene；>1 记为 MULTI:geneA,geneB 方便你排查
     out_wide = []
     out_long = []
 
@@ -63,8 +61,7 @@ def main():
             elif len(genes) == 1:
                 wide_row[sp] = genes[0]
                 out_long.append((og, sp, genes[0]))
-            else:
-                # 理论 single-copy 不该出现；保留信息便于你定位
+            else:           
                 wide_row[sp] = "MULTI:" + ",".join(genes)
                 for g in genes:
                     out_long.append((og, sp, g))
@@ -75,8 +72,7 @@ def main():
 
     long_df = pd.DataFrame(out_long, columns=["Orthogroup", "Species", "Gene"])
     long_df.to_csv(args.out_long, sep="\t", index=False)
-
-    # 统计有多少 MULTI
+   
     multi_cells = wide_df[species_cols].astype(str).applymap(lambda x: x.startswith("MULTI:")).to_numpy().sum()
     print(f"[INFO] MULTI cells (species has >1 gene in this OG): {int(multi_cells)}")
 
