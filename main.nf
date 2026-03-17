@@ -191,7 +191,7 @@ workflow {
     aligned = MAFFT_ALIGN(extracted.og_fastas)
     trimmed = TRIMAL_ALIGN(aligned)
 
-    trimmed.into { trimmed_for_check; trimmed_for_concat }
+    trimmed.out.into { trimmed_for_check; trimmed_for_concat }
 
     CHECK_TRIMMED_LENGTHS(trimmed_for_check.collect())
     concat_out = CONCAT_ALIGNMENTS(trimmed_for_concat.collect())
