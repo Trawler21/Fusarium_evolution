@@ -1,4 +1,29 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Concatenate per-OG trimmed alignments (FASTA) into a supermatrix.
+
+Assumptions:
+- Each *.trimmed.aln is a FASTA alignment.
+- Headers are species names (first token after '>').
+- Ideally each OG contains the same species set; if some species missing,
+  gaps of alignment length will be inserted (safe fallback).
+
+Outputs:
+- concatenated FASTA (one record per species, in ref order)
+- partitions file (start-end per OG, 1-based inclusive)
+
+Example:
+  python3 concat_trimmed_alignments.py \
+    --aln_dir ../trimmed \
+    --pattern "*.trimmed.aln" \
+    --ref species_193.txt \
+    --out_fasta supermatrix.fasta \
+    --out_partitions partitions.txt
+Optional:
+  --og_list og_order.txt   # one filename (or OG id) per line
+"""
 
 import argparse
 import glob
