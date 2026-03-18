@@ -1,4 +1,4 @@
-# **Fusarium Evolution Pipeline**  
+# **OrthoPhyloSCG**  
 A reproducible phylogenomics workflow for extracting single-copy orthogroups from OrthoFinder results and constructing species phylogenies.
 
 ## Overview  
