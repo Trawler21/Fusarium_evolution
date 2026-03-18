@@ -141,6 +141,7 @@ process CONCAT_ALIGNMENTS {
 
     input:
     path trimmed_files
+    path species_ref
 
     output:
     path 'concatenated_alignment.fasta', emit: concat_fa
@@ -149,10 +150,11 @@ process CONCAT_ALIGNMENTS {
     script:
     """
     python3 ${params.concat_script} \
-      --dir . \
+      --aln_dir . \
       --pattern "*.trimmed.aln" \
+      --ref ${species_ref} \
       --out_fasta concatenated_alignment.fasta \
-      --out_partition partition.tsv
+      --out_partitions partition.tsv
     """
 }
 
@@ -182,19 +184,21 @@ workflow {
     sc_tables = MAKE_SC_TABLE(ch_og_tsv, ch_sc_txt)
     extracted = EXTRACT_OG_FASTA(sc_tables.long, ch_proteomes)
 
+    // 用于 coverage 检查：保留为整体文件列表
     extracted.og_fastas
         .collect()
         .set { all_og_fastas }
 
     CHECK_OG_COVERAGE(ch_species_ref, all_og_fastas)
 
-    aligned = MAFFT_ALIGN(extracted.og_fastas)
+    // 用于 mafft：打散成单个 faa 文件逐个比对
+    aligned = MAFFT_ALIGN(extracted.og_fastas.flatten())
     trimmed = TRIMAL_ALIGN(aligned)
 
-    trimmed.into { trimmed_for_check; trimmed_for_concat }
+    trimmed_list = trimmed.collect()
 
-    CHECK_TRIMMED_LENGTHS(trimmed_for_check.collect())
-    concat_out = CONCAT_ALIGNMENTS(trimmed_for_concat.collect())
+    CHECK_TRIMMED_LENGTHS(trimmed_list)
+    concat_out = CONCAT_ALIGNMENTS(trimmed_list, ch_species_ref)
 
     if (params.do_iqtree) {
         IQTREE(concat_out.concat_fa)
